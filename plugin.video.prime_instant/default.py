@@ -84,8 +84,6 @@ viewIdEpisodes = addon.getSetting("viewIdEpisodes")
 viewIdDetails = addon.getSetting("viewIdDetails")
 urlMain = "http://www.amazon."+siteVersion
 urlMainS = "https://www.amazon."+siteVersion
-addon.setSetting('email', '')
-addon.setSetting('password', '')
 deviceTypeID = "A324MFXUEZFF7B"
 
 cookieFile = os.path.join(addonUserDataFolder, siteVersion + ".cookies")
@@ -757,19 +755,8 @@ def playVideo(videoID, selectQuality=False, playTrailer=False):
             content = getUnicodePage('https://'+apiMain+'.amazon.com/cdp/catalog/GetStreamingTrailerUrls?version=1&format=json&firmware=WIN%2011,7,700,224%20PlugIn&marketplaceID='+urllib.quote_plus(matchMID[0].encode("utf8"))+'&token='+urllib.quote_plus(matchToken[0].encode("utf8"))+'&deviceTypeID='+matchDID[0]+'&asin='+videoID+'&customerID='+urllib.quote_plus(matchCID[0].encode("utf8"))+'&deviceID='+urllib.quote_plus(matchCID[0].encode("utf8"))+str(int(time.time()*1000))+videoID)
             selectQuality = True
         elif not playTrailer:
-            if (selectLanguage == "1") and (avail_langs is not None):
-                dialog = xbmcgui.Dialog()
-                sel_lang = []
-                for val in avail_langs:
-                    sel_lang.append(val[1])
-                lnr = dialog.select(translation(30050), sel_lang)
-                if lnr>=0:
-                    playlanguage = "&audioTrackId=" + avail_langs[lnr][0]
-                else:
-                    playlanguage = ""
-            else:
-                playlanguage = ""
-            content = getUnicodePage('https://'+apiMain+'.amazon.com/cdp/catalog/GetStreamingUrlSets?version=1&format=json&firmware=WIN%2011,7,700,224%20PlugIn'+playlanguage+'&marketplaceID='+urllib.quote_plus(matchMID[0].encode("utf8"))+'&token='+urllib.quote_plus(matchToken[0].encode("utf8"))+'&deviceTypeID='+matchDID[0]+'&asin='+videoID+'&customerID='+urllib.quote_plus(matchCID[0].encode("utf8"))+'&deviceID='+urllib.quote_plus(matchCID[0].encode("utf8"))+str(int(time.time()*1000))+videoID)
+            playUrl = "http://www.amazon.com/piv-apk-play?asin=" + videoID
+            xbmc.executebuiltin('XBMC.StartAndroidActivity("com.amazon.avod.thirdpartyclient", "android.intent.action.VIEW", "", "' + playUrl + '")')
         elif playTrailer:
             try:
                 strT = ""
@@ -1057,26 +1044,20 @@ def login(content = None, statusOnly = False):
         deleteCookies()
         content = ""
         keyboard = xbmc.Keyboard('', translation(30090))
-        keyboard.doModal()
-        if keyboard.isConfirmed() and unicode(keyboard.getText(), "utf-8"):
-            email = unicode(keyboard.getText(), "utf-8")
-            keyboard = xbmc.Keyboard('', translation(30091), True)
-            keyboard.setHiddenInput(True)
-            keyboard.doModal()
-            if keyboard.isConfirmed() and unicode(keyboard.getText(), "utf-8"):
-                password = unicode(keyboard.getText(), "utf-8")
-                br = mechanize.Browser()
-                br.set_cookiejar(cj)
-                br.set_handle_robots(False)
-                br.addheaders = [('User-agent', userAgent)]
-                content = br.open(urlMainS+"/gp/sign-in.html")
-                br.select_form(name="signIn")
-                br["email"] = email
-                br["password"] = password
-                content = br.submit().read()
-                cj.save(cookieFile)
-                cj.load(cookieFile)
-                content = getUnicodePage(urlMain)
+        email = addon.getSetting("setting1")
+        password = addon.getSetting("setting2")
+        br = mechanize.Browser()
+        br.set_cookiejar(cj)
+        br.set_handle_robots(False)
+        br.addheaders = [('User-agent', userAgent)]
+        content = br.open(urlMainS+"/gp/sign-in.html")
+        br.select_form(name="signIn")
+        br["email"] = email
+        br["password"] = password
+        content = br.submit().read()
+        cj.save(cookieFile)
+        cj.load(cookieFile)
+        content = getUnicodePage(urlMain)
         signoutmatch = re.compile("declare\('config.signOutText',(.+?)\);", re.DOTALL).findall(content)
         if '","isPrime":1' in content: # 
             return "prime"
