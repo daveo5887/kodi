@@ -757,6 +757,7 @@ def playVideo(videoID, selectQuality=False, playTrailer=False):
         elif not playTrailer:
             playUrl = "http://www.amazon.com/piv-apk-play?asin=" + videoID
             xbmc.executebuiltin('XBMC.StartAndroidActivity("com.amazon.avod.thirdpartyclient", "android.intent.action.VIEW", "", "' + playUrl + '")')
+            return
         elif playTrailer:
             try:
                 strT = ""
